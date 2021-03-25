@@ -1,12 +1,11 @@
-import { Request, Router } from 'itty-router'
+import { Request, Router } from 'itty-router';
+import { handleOptions } from './handlers/handleOptions';
 
-import SaveConsent from './handlers/saveConsent'
+import storeConsents from './handlers/saveConsent';
 
-const router = Router()
+const router = Router();
+router.post('/', storeConsents);
+router.options('*', handleOptions);
+router.get('*', () => new Response('Not found', { status: 404 }));
 
-router
-  
-  .post('/', SaveConsent)
-  .get('*', () => new Response("Not found", { status: 404 }))
-
-export const handleRequest = (request: Request | Request) => router.handle(request)
+export const handleRequest = (request: Request) => router.handle(request);
