@@ -1,43 +1,34 @@
-import { SaveToDB, EndpointPayload } from "./interface/payload";
+import { EndpointPayload } from './types';
+import { corsHeaders } from '../constants';
 
-const SaveConsent = async request => {
-    
-    const timestamp = new Date().toISOString();
-    let json: EndpointPayload = await request.json()
-    const key = json.id;
-    delete json.id
-    let newjson: SaveToDB = json;
-    let requestHeaders = JSON.stringify([...request.headers])
-    const IP = request.headers.get('x-real-ip')
-    const user_ip = IP.replace(/\d*$/, '0')
-    newjson = {...newjson, IP: user_ip} 
-    const json2 = JSON.stringify(newjson)  
-    
-    const consentsString = Object.entries(newjson.consents)
-  .reduce<string[]>((acceptedKeys, [consentKey, value]) => {
-    if (value) acceptedKeys.push(consentKey);
-    return acceptedKeys;
-  }, [])
-  .join(',');
-    
-  const recordValue = [newjson.action, user_ip, timestamp, newjson.url, newjson.userAgent, consentsString, newjson.bannerText].join(';');
+const storeConsents = async (request: Request): Promise<Response> => {
+  const { id, action, url, userAgent, consents, bannerText }: EndpointPayload = await request.json();
 
-     await CONSENTS.put(key, recordValue)
+  if (!id || !action || !url || !userAgent || !consents || !bannerText)
+    return new Response('Some parameter is missing', { status: 400, headers: corsHeaders });
 
-     const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Content-type': 'application/json;charset=UTF-8'
-    }
+  const timestamp = new Date().toISOString();
 
-     const result = {
-        status: "success",
-        statusCode: 200,
-        message: "ok"
-    }
-    return new Response(recordValue, {status: 200, headers})
-    
+  const ip = request.headers.get('x-real-ip') || '';
+  const anonymousIp = ip.replace(/\d*$/, '0');
 
-   // return new Response(JSON.stringify(result), { corHeaders })
-}
+  const consentsString = Object.entries(consents)
+    .reduce<string[]>((acceptedKeys, [consentKey, value]) => {
+      if (value) acceptedKeys.push(consentKey);
+      return acceptedKeys;
+    }, [])
+    .join(',');
 
-export default SaveConsent
+  const recordValue = [action, anonymousIp, timestamp, url, userAgent, consentsString, bannerText].join(';');
+
+  await CONSENTS.put(id, recordValue);
+
+  const headers = {
+    ...corsHeaders,
+    'Content-type': 'application/json',
+  };
+
+  return new Response(recordValue, { status: 200, headers });
+};
+
+export default storeConsents;
