@@ -1,5 +1,4 @@
 import { corsHeaders } from '../utils/constants';
-import { EndpointPayload } from '../utils/types';
 
 const storeConsents = async (request: Request): Promise<Response> => {
   const { id, action, url, userAgent, consents, bannerText }: EndpointPayload = await request.json();
