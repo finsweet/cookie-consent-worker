@@ -1,7 +1,7 @@
 import { corsHeaders } from '../utils/constants';
 
 const storeConsents = async (request: Request): Promise<Response> => {
-  const { id, action, url, userAgent, consents, bannerText }: EndpointPayload = await request.json();
+  const { id, action, url, userAgent, consents, bannerText }: CookieConsentPayload = await request.json();
 
   if (!id || !action || !url || !userAgent || !consents || !bannerText)
     return new Response('Some parameter is missing', { status: 400, headers: corsHeaders });
